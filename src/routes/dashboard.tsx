@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useNura } from "@/lib/nura/store";
-import { generateInsight, mockTrend, recommendations, scoreCheckIn } from "@/lib/nura/scoring";
+import { mockTrend, scoreCheckIn } from "@/lib/nura/scoring";
 import type { ScoredCheckIn } from "@/lib/nura/types";
 import { Disclaimer } from "@/components/nura/Disclaimer";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -37,8 +37,8 @@ function Dashboard() {
   const data = latest ?? demo;
   const isDemo = !latest;
 
-  const insight = generateInsight(data);
-  const recs = recommendations(data);
+  const insight = data.aiSummary ?? "Complete a check-in to generate a backend-powered wellbeing insight.";
+  const recs = data.recommendations ?? [];
   const trend = mockTrend(data.score);
 
   const levelColor =
@@ -154,10 +154,18 @@ function Dashboard() {
           <p className="text-sm font-semibold">Preventative recommendations</p>
           <p className="mt-1 text-xs text-muted-foreground">Small, evidence-led steps for the next 24 hours.</p>
           <ul className="mt-4 space-y-2.5">
-            {recs.map((r) => (
-              <li key={r} className="flex items-start gap-3 text-sm">
+            {recs.length === 0 && (
+              <li className="flex items-start gap-3 text-sm">
                 <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand" />
-                <span>{r}</span>
+                <span>Complete a check-in to get personalised backend recommendations.</span>
+              </li>
+            )}
+            {recs.map((r) => (
+              <li key={r.id} className="flex items-start gap-3 text-sm">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand" />
+                <span>
+                  <span className="font-medium">{r.title}:</span> {r.description}
+                </span>
               </li>
             ))}
           </ul>

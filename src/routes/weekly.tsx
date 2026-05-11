@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Disclaimer } from "@/components/nura/Disclaimer";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Sparkles, TrendingDown, Award, AlertCircle } from "lucide-react";
 import { ClientOnly } from "@/components/nura/ClientOnly";
+import { getWeeklyReport, type WeeklyReport } from "@/lib/nura/api";
 
 export const Route = createFileRoute("/weekly")({
   head: () => ({
@@ -24,21 +26,45 @@ const weekData = [
   { day: "Sun", score: 44, sleep: 7.0, stress: 6, mood: 7 },
 ];
 
+function toChartData(report: WeeklyReport | null) {
+  if (!report) return weekData;
+  return report.chartData.map((point) => ({
+    day: point.day,
+    score: point.score,
+    sleep: point.sleepHours,
+    stress: point.stressScore,
+    mood: point.moodScore,
+  }));
+}
+
 function WeeklyPage() {
-  const avg = Math.round(weekData.reduce((a, b) => a + b.score, 0) / weekData.length);
-  const best = weekData.reduce((a, b) => (b.score < a.score ? b : a));
+  const [report, setReport] = useState<WeeklyReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const data = toChartData(report);
+  const avg = report?.averageScore ?? Math.round(data.reduce((a, b) => a + b.score, 0) / data.length);
+  const best = data.reduce((a, b) => (b.score < a.score ? b : a));
+
+  useEffect(() => {
+    getWeeklyReport()
+      .then((weeklyReport) => {
+        setReport(weeklyReport);
+        setError(null);
+      })
+      .catch(() => setError("Nura couldn't load the backend weekly report, so demo data is shown."));
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-sm font-medium text-brand">Weekly report</p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">Your week at a glance</h1>
       <p className="mt-2 text-muted-foreground">Patterns from your last 7 daily check-ins.</p>
+      {error && <div className="mt-6 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">{error}</div>}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Avg. wellbeing score" value={String(avg)} sub="Moderate range" />
         <Stat label="Best day" value={best.day} sub={`Score ${best.score}`} icon={Award} />
-        <Stat label="Most concerning" value="Stress" sub="Climbed mid-week" icon={AlertCircle} tone="warning" />
-        <Stat label="Sleep trend" value="↘ 6.6h avg" sub="Slight drop vs last week" icon={TrendingDown} tone="warning" />
+        <Stat label="Most concerning" value="Stress" sub={report?.stressTrend ?? "Climbed mid-week"} icon={AlertCircle} tone="warning" />
+        <Stat label="Sleep trend" value={report?.weeklyTrend ?? "Stable"} sub={report?.sleepTrend ?? "Slight drop vs last week"} icon={TrendingDown} tone="warning" />
       </div>
 
       <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-card">
@@ -47,8 +73,8 @@ function WeeklyPage() {
           <p className="text-sm font-semibold">AI-generated weekly summary</p>
         </div>
         <p className="mt-4 leading-relaxed text-foreground/90">
-          This week, your stress levels were consistently high while sleep dropped below your usual range.
-          Mood held up well overall, but mid-week fatigue suggests your recovery isn't fully catching up.
+          {report?.weeklySummary ??
+            "This week, your stress levels were consistently high while sleep dropped below your usual range. Mood held up well overall, but mid-week fatigue suggests your recovery isn't fully catching up."}
         </p>
         <div className="mt-5 rounded-2xl border border-brand/30 bg-brand-soft/40 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand">Suggested focus for next week</p>
@@ -64,7 +90,7 @@ function WeeklyPage() {
           <div className="mt-4 h-56 w-full">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse rounded-2xl bg-muted/40" />}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekData}>
+              <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 220)" />
                 <XAxis dataKey="day" tickLine={false} axisLine={false} stroke="oklch(0.5 0.03 240)" />
                 <YAxis domain={[0, 100]} tickLine={false} axisLine={false} stroke="oklch(0.5 0.03 240)" />
@@ -81,7 +107,7 @@ function WeeklyPage() {
           <div className="mt-4 h-56 w-full">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse rounded-2xl bg-muted/40" />}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weekData}>
+              <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 220)" />
                 <XAxis dataKey="day" tickLine={false} axisLine={false} stroke="oklch(0.5 0.03 240)" />
                 <YAxis domain={[0, 10]} tickLine={false} axisLine={false} stroke="oklch(0.5 0.03 240)" />

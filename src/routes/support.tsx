@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useNura } from "@/lib/nura/store";
+import { getSupportServices, type SupportService } from "@/lib/nura/api";
 import { Disclaimer } from "@/components/nura/Disclaimer";
 import { Phone, Stethoscope, GraduationCap, Brain, Users, AlertTriangle, ArrowRight } from "lucide-react";
 
@@ -30,9 +32,29 @@ const urgencyClass: Record<Urgency, string> = {
   Urgent: "bg-danger/15 text-danger border-danger/40",
 };
 
+const apiUrgencyClass: Record<SupportService["urgency"], string> = {
+  Low: "bg-success/15 text-success border-success/30",
+  Medium: "bg-warning/15 text-warning-foreground border-warning/40",
+  High: "bg-danger/15 text-danger border-danger/40",
+  Urgent: "bg-danger/15 text-danger border-danger/40",
+};
+
+const serviceIcons = [Phone, Stethoscope, GraduationCap, Brain, Users, AlertTriangle];
+
 function SupportPage() {
   const { latest } = useNura();
   const showAll = !latest || latest.level !== "Low";
+  const [services, setServices] = useState<SupportService[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSupportServices(latest?.level ?? "Moderate")
+      .then((response) => {
+        setServices(response.services);
+        setError(null);
+      })
+      .catch(() => setError("Nura couldn't load backend support services, so demo resources are shown."));
+  }, [latest?.level]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -48,8 +70,32 @@ function SupportPage() {
         </div>
       )}
 
+      {error && <div className="mt-6 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">{error}</div>}
+
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {resources.map((r) => (
+        {services ? services.map((service, index) => {
+          const Icon = serviceIcons[index % serviceIcons.length];
+          return (
+          <div key={service.id} className="flex flex-col rounded-3xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center justify-between">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${apiUrgencyClass[service.urgency]}`}>
+                {service.urgency}
+              </span>
+            </div>
+            <h2 className="mt-4 text-base font-semibold">{service.name}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
+            <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+              <p><span className="font-medium text-foreground">Contact:</span> {service.contact}</p>
+              <p><span className="font-medium text-foreground">Hours:</span> {service.openingHours}</p>
+            </div>
+            <button className="mt-5 inline-flex items-center gap-1.5 self-start rounded-full border border-border px-4 py-2 text-xs font-semibold hover:bg-muted">
+              View details <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        );}) : resources.map((r) => (
           <div key={r.name} className="flex flex-col rounded-3xl border border-border bg-card p-6 shadow-card">
             <div className="flex items-center justify-between">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand">

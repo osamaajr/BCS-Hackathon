@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useNura } from "@/lib/nura/store";
-import { scoreCheckIn } from "@/lib/nura/scoring";
+import { createInsight } from "@/lib/nura/api";
 import type { CheckIn } from "@/lib/nura/types";
 import { Disclaimer } from "@/components/nura/Disclaimer";
 import { Moon, Smile, Brain, Activity, HeartPulse, Droplets, BatteryLow, Users, Cigarette } from "lucide-react";
@@ -34,14 +34,26 @@ function CheckInPage() {
   const navigate = useNavigate();
   const { setLatest } = useNura();
   const [form, setForm] = useState<CheckIn>(defaults);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const update = <K extends keyof CheckIn>(k: K, v: CheckIn[K]) => setForm((f) => ({ ...f, [k]: v }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const scored = scoreCheckIn({ ...form, date: new Date().toISOString() });
-    setLatest(scored);
-    navigate({ to: "/dashboard" });
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const checkIn = { ...form, date: new Date().toISOString() };
+      const scored = await createInsight(checkIn);
+      setLatest(scored);
+      navigate({ to: "/dashboard" });
+    } catch {
+      setError("Nura couldn't reach the backend just now. Check that the server is running and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,10 +109,17 @@ function CheckInPage() {
 
         <button
           type="submit"
-          className="w-full rounded-full gradient-brand py-4 text-sm font-semibold text-brand-foreground shadow-soft transition-transform hover:scale-[1.01]"
+          disabled={isSubmitting}
+          className="w-full rounded-full gradient-brand py-4 text-sm font-semibold text-brand-foreground shadow-soft transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          See my wellbeing insight
+          {isSubmitting ? "Creating your insight..." : "See my wellbeing insight"}
         </button>
+
+        {error && (
+          <div className="rounded-2xl border border-danger/30 bg-danger/5 p-4 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
         <Disclaimer compact />
       </form>

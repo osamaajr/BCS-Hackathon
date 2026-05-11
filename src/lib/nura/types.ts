@@ -14,8 +14,18 @@ export type CheckIn = {
 
 export type RiskLevel = "Low" | "Moderate" | "High";
 
+export type Recommendation = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+};
+
 export type ScoredCheckIn = CheckIn & {
   score: number;
   level: RiskLevel;
   factors: { key: string; label: string; weight: number; reason: string }[];
+  aiSummary?: string;
+  recommendations?: Recommendation[];
+  disclaimer?: string;
 };
