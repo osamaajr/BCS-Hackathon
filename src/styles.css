@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -42,8 +43,8 @@
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.99 0.008 200);
+  --radius: 1rem;
+  --background: oklch(0.992 0.01 190);
   --foreground: oklch(0.22 0.04 240);
 
   --card: oklch(1 0 0);
@@ -81,11 +82,16 @@
   --input: oklch(0.94 0.01 220);
   --ring: oklch(0.7 0.1 195);
 
-  --gradient-hero: linear-gradient(135deg, oklch(0.95 0.05 195) 0%, oklch(0.97 0.04 165) 50%, oklch(0.96 0.04 280) 100%);
-  --gradient-brand: linear-gradient(135deg, oklch(0.65 0.13 195), oklch(0.7 0.12 175));
-  --gradient-card: linear-gradient(180deg, oklch(1 0 0), oklch(0.98 0.01 200));
-  --shadow-soft: 0 8px 30px -10px oklch(0.5 0.1 220 / 0.15);
-  --shadow-card: 0 2px 12px -4px oklch(0.5 0.1 220 / 0.08);
+  --font-serif-display: "Libre Baskerville", Georgia, Cambria, "Times New Roman", serif;
+  --font-serif-italic: Baskerville, "Baskerville Old Face", "Libre Baskerville", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans-premium: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --gradient-hero: radial-gradient(circle at 50% 0%, oklch(0.94 0.055 180 / 0.95), transparent 42%),
+    linear-gradient(135deg, oklch(0.985 0.018 190) 0%, oklch(0.97 0.035 165) 52%, oklch(0.985 0.018 210) 100%);
+  --gradient-brand: linear-gradient(135deg, oklch(0.63 0.13 195), oklch(0.72 0.12 170));
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0 / 0.94), oklch(0.985 0.012 195 / 0.9));
+  --shadow-soft: 0 24px 70px -34px oklch(0.45 0.12 210 / 0.34);
+  --shadow-card: 0 18px 45px -34px oklch(0.36 0.1 210 / 0.35);
+  --shadow-glow: 0 0 70px oklch(0.74 0.12 175 / 0.18);
 }
 
 .dark {
@@ -122,9 +128,60 @@
 @layer base {
   * { border-color: var(--color-border); }
   body {
-    background-color: var(--color-background);
+    background:
+      radial-gradient(circle at 16% -8%, oklch(0.91 0.07 185 / 0.45), transparent 34rem),
+      radial-gradient(circle at 90% 10%, oklch(0.93 0.06 165 / 0.35), transparent 30rem),
+      var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans-premium);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: 0;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-serif-display);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: oklch(0.88 0.08 180 / 0.65);
+  }
+
+  a,
+  button {
+    letter-spacing: 0;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: var(--font-sans-premium);
+  }
+}
+
+@layer components {
+  .shadow-card {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  }
+
+  .shadow-card:hover {
+    box-shadow: var(--shadow-soft);
+  }
+
+  input,
+  textarea,
+  select {
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.55);
   }
 }
 
@@ -133,3 +190,31 @@
 @utility gradient-card { background: var(--gradient-card); }
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 @utility shadow-card { box-shadow: var(--shadow-card); }
+@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@utility font-display { font-family: var(--font-serif-display); }
+@utility font-premium { font-family: var(--font-sans-premium); }
+@utility text-editorial {
+  font-family: var(--font-serif-display);
+  font-weight: 400;
+  line-height: 0.99;
+  letter-spacing: 0;
+}
+@utility hero-accent {
+  font-family: var(--font-serif-italic);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  font-synthesis: none;
+  color: var(--brand);
+}
+@utility premium-surface {
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.88), oklch(0.985 0.014 190 / 0.82));
+  border-color: oklch(0.9 0.018 210 / 0.8);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(18px);
+}
+@utility premium-button {
+  box-shadow: 0 14px 36px -22px oklch(0.35 0.11 190 / 0.7);
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}

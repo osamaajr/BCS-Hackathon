@@ -1,22 +1,13 @@
-import type { CheckIn, Recommendation, RiskLevel, ScoredCheckIn } from "./types";
+import type { CheckIn, EnvironmentalContext, HealthProfile, Recommendation, ScoredCheckIn, StressLoad } from "./types";
 
-type WellbeingInput = {
-  sleepHours: number;
-  moodScore: number;
-  stressScore: number;
-  activityMinutes: number;
-  restingHeartRate: number;
-  waterIntake: number;
-  fatigueLevel: number;
-  socialInteraction: number;
-  smokingAlcohol: boolean;
-  notes: string;
-};
+type WellbeingInput = Omit<CheckIn, "date">;
 
 type InsightResponse = {
-  score: number;
-  level: RiskLevel;
+  wellnessScore: number;
+  stressLoad: StressLoad;
+  weeklyTrend: "Improving" | "Stable" | "Needs attention";
   factors: ScoredCheckIn["factors"];
+  preventativeInsights: string[];
   aiSummary: string;
   recommendations: Recommendation[];
   disclaimer: string;
@@ -31,10 +22,14 @@ export type WeeklyReport = {
   weeklySummary: string;
   chartData: {
     day: string;
-    score: number;
+    wellnessScore: number;
     sleepHours: number;
-    moodScore: number;
-    stressScore: number;
+    sleepQuality: number;
+    stressLevel: number;
+    activityLevel: "Low" | "Moderate" | "High";
+    emotionalBalance: number;
+    waterIntake: number;
+    energyLevel: number;
   }[];
 };
 
@@ -49,23 +44,58 @@ export type SupportService = {
 };
 
 export type SupportResponse = {
-  riskLevel: RiskLevel;
+  riskLevel: "Low" | "Moderate" | "High";
   services: SupportService[];
 };
 
-function toWellbeingInput(checkIn: CheckIn): WellbeingInput {
-  return {
-    sleepHours: checkIn.sleep,
-    moodScore: checkIn.mood,
-    stressScore: checkIn.stress,
-    activityMinutes: checkIn.activity,
-    restingHeartRate: checkIn.restingHr,
-    waterIntake: checkIn.water,
-    fatigueLevel: checkIn.fatigue,
-    socialInteraction: checkIn.social,
-    smokingAlcohol: checkIn.smokingAlcohol,
-    notes: checkIn.notes,
+export type RecommendedResource = {
+  id: string;
+  title: string;
+  category: string;
+  whyRelevant: string;
+  nextStep: string;
+  trustedSource: string;
+  urlLabel: string;
+  url: string;
+  priority: "Core" | "Helpful" | "General";
+};
+
+export type ResourceRecommendationResponse = {
+  patientId: string;
+  resources: RecommendedResource[];
+  safetyNote: string;
+};
+
+export type TrendInsight = {
+  id: string;
+  title: string;
+  description: string;
+  severity: "Positive" | "Watch" | "Elevated";
+};
+
+export type CheckInHistoryEntry = {
+  id: string;
+  createdAt: string;
+  wellbeingData: WellbeingInput;
+  assessment: {
+    wellnessScore: number;
+    stressLoad: StressLoad;
+    weeklyTrend: "Improving" | "Stable" | "Needs attention";
+    factors: ScoredCheckIn["factors"];
+    preventativeInsights: string[];
   };
+  aiSummary: string;
+  recommendations: Recommendation[];
+};
+
+export type CheckInHistoryResponse = {
+  checkIns: CheckInHistoryEntry[];
+  trendInsights: TrendInsight[];
+};
+
+function toWellbeingInput(checkIn: CheckIn): WellbeingInput {
+  const { date: _date, ...wellbeingData } = checkIn;
+  return wellbeingData;
 }
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -77,22 +107,17 @@ async function parseJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function createInsight(checkIn: CheckIn): Promise<ScoredCheckIn> {
+export async function createInsight(checkIn: CheckIn, profile?: HealthProfile, environmentalContext?: EnvironmentalContext): Promise<ScoredCheckIn> {
   const response = await fetch("/api/insights", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ wellbeingData: toWellbeingInput(checkIn) }),
+    body: JSON.stringify({ wellbeingData: toWellbeingInput(checkIn), profile, environmentalContext }),
   });
   const insight = await parseJson<InsightResponse>(response);
 
   return {
     ...checkIn,
-    score: insight.score,
-    level: insight.level,
-    factors: insight.factors,
-    aiSummary: insight.aiSummary,
-    recommendations: insight.recommendations,
-    disclaimer: insight.disclaimer,
+    ...insight,
   };
 }
 
@@ -101,7 +126,22 @@ export async function getWeeklyReport(): Promise<WeeklyReport> {
   return parseJson<WeeklyReport>(response);
 }
 
-export async function getSupportServices(riskLevel: RiskLevel): Promise<SupportResponse> {
-  const response = await fetch(`/api/support/${riskLevel}`);
+export async function getSupportServices(stressLoad: StressLoad): Promise<SupportResponse> {
+  const mappedLevel = stressLoad === "Low" ? "Low" : stressLoad === "Balanced" ? "Moderate" : "High";
+  const response = await fetch(`/api/support/${mappedLevel}`);
   return parseJson<SupportResponse>(response);
+}
+
+export async function getRecommendedResources(profile: HealthProfile, latestCheckIn?: CheckIn): Promise<ResourceRecommendationResponse> {
+  const response = await fetch("/api/resources/recommendations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile, latestCheckIn: latestCheckIn ? toWellbeingInput(latestCheckIn) : undefined }),
+  });
+  return parseJson<ResourceRecommendationResponse>(response);
+}
+
+export async function getCheckInHistory(): Promise<CheckInHistoryResponse> {
+  const response = await fetch("/api/checkins");
+  return parseJson<CheckInHistoryResponse>(response);
 }

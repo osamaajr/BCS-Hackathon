@@ -1,40 +1,41 @@
 import { Link } from "@tanstack/react-router";
-import { Activity } from "lucide-react";
+import { Activity, UserRound } from "lucide-react";
 
 const links = [
   { to: "/checkin", label: "Check-In" },
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/weekly", label: "Weekly Report" },
-  { to: "/support", label: "Support" },
+  { to: "/weekly", label: "Timeline" },
+  { to: "/profile", label: "Profile" },
+  { to: "/support", label: "Resources" },
 ] as const;
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b border-border/50 bg-background/72 backdrop-blur-2xl">
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl gradient-brand text-brand-foreground shadow-soft">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl gradient-brand text-brand-foreground shadow-soft">
             <Activity className="h-5 w-5" />
           </span>
-          <span className="text-lg font-semibold tracking-tight">Nura</span>
+          <span className="font-display text-2xl leading-none">Nura</span>
         </Link>
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-border/70 bg-card/58 p-1 shadow-card backdrop-blur md:flex">
           {links.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              activeProps={{ className: "rounded-full px-4 py-2 text-sm font-medium bg-brand-soft text-foreground" }}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted/70 hover:text-foreground"
+              activeProps={{ className: "rounded-full px-4 py-2 text-sm font-semibold bg-brand-soft text-foreground shadow-card" }}
             >
               {l.label}
             </Link>
           ))}
         </nav>
         <Link
-          to="/checkin"
-          className="rounded-full gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-soft transition-transform hover:scale-[1.02]"
+          to="/profile"
+          className="premium-button inline-flex items-center gap-2 rounded-full gradient-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground hover:-translate-y-0.5 hover:shadow-soft"
         >
-          Start Check-In
+          <UserRound className="h-4 w-4" /> Profile
         </Link>
       </div>
       <nav className="flex items-center gap-1 overflow-x-auto px-4 pb-3 md:hidden">

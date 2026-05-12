@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { Navbar } from "@/components/nura/Navbar";
 import { Disclaimer } from "@/components/nura/Disclaimer";
 import { NuraProvider } from "@/lib/nura/store";
+import { ProfileProvider } from "@/lib/nura/profile";
 
 function NotFoundComponent() {
   return (
@@ -51,8 +52,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nura — Preventative Wellbeing" },
-      { name: "description", content: "Nura turns daily health and lifestyle data into personalised prevention insights." },
+      { title: "Nura — AI Preventative Wellness" },
+      { name: "description", content: "Nura transforms daily health and lifestyle data into personalized preventative wellness intelligence." },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
@@ -75,20 +76,22 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <NuraProvider>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <footer className="border-t border-border/60 bg-muted/30">
-            <div className="mx-auto max-w-6xl space-y-3 px-4 py-8">
-              <Disclaimer compact />
-              <p className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Nura · Built for preventative wellbeing</p>
-            </div>
-          </footer>
-        </div>
-      </NuraProvider>
+      <ProfileProvider>
+        <NuraProvider>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <footer className="border-t border-border/50 bg-card/45 backdrop-blur">
+              <div className="mx-auto max-w-6xl space-y-4 px-4 py-10">
+                <Disclaimer compact />
+                <p className="text-center text-xs font-medium text-muted-foreground">© {new Date().getFullYear()} Nura · AI-powered preventative wellness</p>
+              </div>
+            </footer>
+          </div>
+        </NuraProvider>
+      </ProfileProvider>
     </QueryClientProvider>
   );
 }

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeeklyRouteImport } from './routes/weekly'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckinRouteImport } from './routes/checkin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const WeeklyRoute = WeeklyRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkin': typeof CheckinRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/support': typeof SupportRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkin': typeof CheckinRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/support': typeof SupportRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -60,21 +68,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/checkin': typeof CheckinRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/support': typeof SupportRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/checkin' | '/dashboard' | '/support' | '/weekly'
+  fullPaths:
+    | '/'
+    | '/checkin'
+    | '/dashboard'
+    | '/profile'
+    | '/support'
+    | '/weekly'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/checkin' | '/dashboard' | '/support' | '/weekly'
-  id: '__root__' | '/' | '/checkin' | '/dashboard' | '/support' | '/weekly'
+  to: '/' | '/checkin' | '/dashboard' | '/profile' | '/support' | '/weekly'
+  id:
+    | '__root__'
+    | '/'
+    | '/checkin'
+    | '/dashboard'
+    | '/profile'
+    | '/support'
+    | '/weekly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckinRoute: typeof CheckinRoute
   DashboardRoute: typeof DashboardRoute
+  ProfileRoute: typeof ProfileRoute
   SupportRoute: typeof SupportRoute
   WeeklyRoute: typeof WeeklyRoute
 }
@@ -93,6 +116,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -123,6 +153,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckinRoute: CheckinRoute,
   DashboardRoute: DashboardRoute,
+  ProfileRoute: ProfileRoute,
   SupportRoute: SupportRoute,
   WeeklyRoute: WeeklyRoute,
 }

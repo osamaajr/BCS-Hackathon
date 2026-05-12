@@ -1,96 +1,53 @@
-import type { CheckIn, RiskLevel, ScoredCheckIn } from "./types";
+import type { CheckIn, HealthProfile, ScoredCheckIn } from "./types";
 
-export function scoreCheckIn(c: CheckIn): ScoredCheckIn {
-  const factors: ScoredCheckIn["factors"] = [];
-  let score = 10; // baseline
-
-  if (c.sleep < 6) {
-    const w = (6 - c.sleep) * 8;
-    score += w;
-    factors.push({ key: "sleep", label: "Reduced sleep", weight: w, reason: `Only ${c.sleep}h sleep — recovery is limited below 6h.` });
-  }
-  if (c.stress > 7) {
-    const w = (c.stress - 7) * 7;
-    score += w;
-    factors.push({ key: "stress", label: "Elevated stress", weight: w, reason: `Stress at ${c.stress}/10 puts strain on recovery.` });
-  }
-  if (c.mood < 5) {
-    const w = (5 - c.mood) * 6;
-    score += w;
-    factors.push({ key: "mood", label: "Lower mood", weight: w, reason: `Mood at ${c.mood}/10 may signal emotional fatigue.` });
-  }
-  if (c.activity < 20) {
-    const w = (20 - c.activity) * 0.6;
-    score += w;
-    factors.push({ key: "activity", label: "Low activity", weight: w, reason: `Only ${c.activity} min of movement today.` });
-  }
-  if (c.restingHr > 90) {
-    const w = (c.restingHr - 90) * 1.2;
-    score += w;
-    factors.push({ key: "hr", label: "Elevated resting heart rate", weight: w, reason: `Resting HR ${c.restingHr} bpm is above the typical range.` });
-  }
-  if (c.water < 1.5) {
-    const w = (1.5 - c.water) * 10;
-    score += w;
-    factors.push({ key: "water", label: "Low hydration", weight: w, reason: `${c.water}L of water — hydration is below 1.5L.` });
-  }
-  if (c.fatigue > 7) {
-    const w = (c.fatigue - 7) * 6;
-    score += w;
-    factors.push({ key: "fatigue", label: "High fatigue", weight: w, reason: `Fatigue at ${c.fatigue}/10 — recovery may be incomplete.` });
-  }
-  if (c.social < 4) {
-    const w = (4 - c.social) * 4;
-    score += w;
-    factors.push({ key: "social", label: "Low social interaction", weight: w, reason: `Social connection at ${c.social}/10 — isolation can increase risk.` });
-  }
-  if (c.smokingAlcohol) {
-    score += 8;
-    factors.push({ key: "lifestyle", label: "Smoking / alcohol today", weight: 8, reason: `Smoking or alcohol contributes to cumulative wellbeing risk.` });
-  }
-
-  score = Math.max(0, Math.min(100, Math.round(score)));
-  const level: RiskLevel = score < 35 ? "Low" : score < 65 ? "Moderate" : "High";
-
-  factors.sort((a, b) => b.weight - a.weight);
-
-  return { ...c, score, level, factors };
+function clampScore(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-export function generateInsight(s: ScoredCheckIn): string {
-  if (s.factors.length === 0) {
-    return "Your current inputs look balanced. Sleep, stress, hydration and activity are all in healthy ranges. Keep this rhythm — consistency is what builds long-term resilience.";
-  }
-  const top = s.factors.slice(0, 3).map((f) => f.label.toLowerCase());
-  const list =
-    top.length === 1 ? top[0] : top.length === 2 ? `${top[0]} and ${top[1]}` : `${top[0]}, ${top[1]} and ${top[2]}`;
-  const tone =
-    s.level === "High"
-      ? "This pattern suggests your body may not be recovering well right now."
-      : s.level === "Moderate"
-      ? "This pattern suggests some early signs your body could use more recovery."
-      : "Your overall pattern is gentle — these are minor signals to watch.";
-  return `Your current score is mainly influenced by ${list}. ${tone} This does not mean you have a medical condition. Consider prioritising rest, hydration, light movement and reaching out for support if this pattern continues.`;
+export function scoreCheckIn(c: CheckIn, profile?: HealthProfile): ScoredCheckIn {
+  const stressLoad = c.stressLevel >= 8 ? "Elevated" : c.stressLevel >= 5 ? "Balanced" : "Low";
+  const sleepScore = ((c.sleepHours >= 7 ? 90 : c.sleepHours >= 6 ? 72 : 48) + c.sleepQuality * 10) / 2;
+  const hydrationScore = Math.min(100, (c.waterIntake / 2.5) * 100);
+  const profilePenalty = profile
+    ? (profile.bmi >= 30 ? 4 : 0) +
+      (profile.smokingStatus === "Current smoker" ? 5 : 0) +
+      (profile.weeklyExerciseMinutes < 75 ? 4 : 0) +
+      (profile.alcoholUnitsPerWeek > 14 ? 3 : 0) +
+      (profile.systolicBp >= 140 || profile.diastolicBp >= 90 || profile.hasHypertension ? 5 : 0) +
+      (profile.restingHeartRate >= 85 ? 2 : 0)
+    : 0;
+  const wellnessScore = clampScore(
+    sleepScore * 0.24 +
+      (100 - c.stressLevel * 10) * 0.2 +
+      (c.activityLevel === "High" ? 90 : c.activityLevel === "Moderate" ? 74 : 48) * 0.16 +
+      hydrationScore * 0.16 +
+      c.emotionalBalance * 10 * 0.14 +
+      c.energyLevel * 10 * 0.1 -
+      profilePenalty,
+  );
+
+  return {
+    ...c,
+    wellnessScore,
+    stressLoad,
+    weeklyTrend: wellnessScore >= 75 ? "Improving" : wellnessScore >= 58 ? "Stable" : "Needs attention",
+    factors: [
+      { key: "sleep", label: "Sleep trend", weight: 18, reason: "Sleep duration and quality influence today's wellness score." },
+      { key: "stress", label: "Stress load", weight: 16, reason: "Stress is one of the stronger inputs today." },
+      ...(profile ? [
+        { key: "blood-pressure", label: "Blood pressure context", weight: 24, reason: "The synthetic profile includes high blood pressure readings and hypertension history." },
+        { key: "smoking", label: "Smoking status", weight: 22, reason: "Current smoking status is included as a lifestyle risk signal." },
+        { key: "bmi", label: "BMI context", weight: 18, reason: "The synthetic profile includes an elevated BMI." },
+      ] : []),
+    ],
+    preventativeInsights: [
+      "Complete a check-in to generate personalized preventative insights from the backend.",
+    ],
+  };
 }
 
-export function recommendations(s: ScoredCheckIn): string[] {
-  const recs: string[] = [];
-  const keys = new Set(s.factors.map((f) => f.key));
-  if (keys.has("sleep")) recs.push("Aim for a consistent 7–9h sleep window this week.");
-  if (keys.has("stress")) recs.push("Try a 10-minute wind-down — breathing, a walk, or screen-free time.");
-  if (keys.has("mood")) recs.push("Schedule one small thing that usually lifts your mood today.");
-  if (keys.has("activity")) recs.push("Add a 20-minute light walk to break up sitting time.");
-  if (keys.has("hr")) recs.push("Notice caffeine and late workouts — both can keep resting HR up.");
-  if (keys.has("water")) recs.push("Keep a water bottle visible and aim for 2L across the day.");
-  if (keys.has("fatigue")) recs.push("Protect a recovery evening — earlier dinner, dim lights, no late screens.");
-  if (keys.has("social")) recs.push("Reach out to one person you trust — even a short message counts.");
-  if (keys.has("lifestyle")) recs.push("Consider a lower-intake day tomorrow to give your system a break.");
-  if (recs.length === 0) recs.push("Keep your current rhythm — consistency is the strongest prevention signal.");
-  return recs;
-}
-
-export function mockTrend(currentScore: number): { day: string; score: number }[] {
+export function mockTrend(currentScore: number): { day: string; score: number; sleep: number; stress: number; hydration: number; balance: number }[] {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const base = [42, 38, 51, 47, 55, 49, currentScore];
-  return days.map((d, i) => ({ day: d, score: base[i] }));
+  const base = [76, 72, 68, 70, 74, 80, currentScore];
+  return days.map((d, i) => ({ day: d, score: base[i], sleep: [70, 66, 58, 62, 70, 80, 78][i], stress: [50, 60, 80, 70, 60, 40, 40][i], hydration: [84, 72, 60, 76, 88, 96, 100][i], balance: [70, 65, 60, 62, 70, 80, 80][i] }));
 }

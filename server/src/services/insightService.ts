@@ -2,10 +2,10 @@ import { MEDICAL_DISCLAIMER } from "../constants/disclaimers";
 import type { CheckInRepository } from "../repositories/CheckInRepository";
 import type { InsightsRepository } from "../repositories/InsightsRepository";
 import { createId } from "../utils/id";
-import { calculateRiskScore } from "./riskService";
+import { calculateWellnessScore } from "./wellnessScoringService";
 import { generateRecommendations } from "./recommendationService";
 import { AiService } from "./aiService";
-import type { CheckInEntry, InsightResponse, WellbeingInput } from "../types/wellbeing";
+import type { CheckInEntry, EnvironmentalContext, HealthProfile, InsightResponse, WellbeingInput } from "../types/wellbeing";
 
 export class InsightService {
   constructor(
@@ -14,10 +14,10 @@ export class InsightService {
     private readonly aiService: AiService,
   ) {}
 
-  async createInsight(wellbeingData: WellbeingInput): Promise<InsightResponse> {
-    const assessment = calculateRiskScore(wellbeingData);
-    const recommendations = generateRecommendations(assessment);
-    const aiSummary = await this.aiService.generateWellbeingSummary(wellbeingData, assessment);
+  async createInsight(wellbeingData: WellbeingInput, profile?: HealthProfile, environmentalContext?: EnvironmentalContext): Promise<InsightResponse> {
+    const assessment = calculateWellnessScore(wellbeingData, profile);
+    const recommendations = generateRecommendations(assessment, profile);
+    const aiSummary = await this.aiService.generateWellbeingSummary(wellbeingData, assessment, profile, environmentalContext);
 
     const response: InsightResponse = {
       ...assessment,
@@ -31,6 +31,8 @@ export class InsightService {
       id: createId("checkin"),
       createdAt,
       wellbeingData,
+      profile,
+      environmentalContext,
       assessment,
       aiSummary,
       recommendations,
@@ -41,6 +43,7 @@ export class InsightService {
       id: createId("insight"),
       createdAt,
       wellbeingData,
+      profile,
       insight: response,
     });
 

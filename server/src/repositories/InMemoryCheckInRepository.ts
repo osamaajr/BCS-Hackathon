@@ -18,6 +18,10 @@ export class InMemoryCheckInRepository implements CheckInRepository {
     return [...this.entries];
   }
 
+  async findRecent(limit: number): Promise<CheckInEntry[]> {
+    return this.entries.slice(-limit);
+  }
+
   async getWeeklyReport(): Promise<WeeklyReport> {
     return mockWeeklyReport;
   }
