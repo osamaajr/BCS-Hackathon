@@ -10,7 +10,6 @@ import {
 
 import appCss from "../styles.css?url";
 import { Navbar } from "@/components/nura/Navbar";
-import { Disclaimer } from "@/components/nura/Disclaimer";
 import { NuraProvider } from "@/lib/nura/store";
 import { ProfileProvider } from "@/lib/nura/profile";
 
@@ -83,10 +82,12 @@ function RootComponent() {
             <main className="flex-1">
               <Outlet />
             </main>
-            <footer className="border-t border-border/50 bg-card/45 backdrop-blur">
-              <div className="mx-auto max-w-6xl space-y-4 px-4 py-10">
-                <Disclaimer compact />
-                <p className="text-center text-xs font-medium text-muted-foreground">© {new Date().getFullYear()} Nura · AI-powered preventative wellness</p>
+            <footer className="border-t border-border/50 bg-card/35 backdrop-blur">
+              <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-16 text-center">
+                <div className="wordmark text-6xl leading-none">Nura</div>
+                <div className="mt-5 rounded-full border border-border/70 bg-brand-soft/45 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  BCS Merseyside Hackathon 2026
+                </div>
               </div>
             </footer>
           </div>
