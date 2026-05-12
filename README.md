@@ -1,16 +1,64 @@
-# Nura
+# 🌿 Nura
 
-AI-powered wellbeing prevention for Merseyside. Making health simple.
+**Nura** is an AI-powered preventative wellness prototype that turns daily health check-ins, synthetic health profile data and local context into clear, personalised wellbeing insights.
 
-Nura helps people and community teams understand early wellbeing risks before they become harder to manage. It combines synthetic health profiles with real public health context to turn complex local data into clear prevention insights, practical recommendations, and relevant support routes.
+Built for the **BCS Merseyside Hackathon 2026**, it explores how structured lifestyle data could support earlier, calmer preventative health conversations.
 
-## What it does
+🔗 **Live demo:** _Add link here_
 
-- Shows personal preventative wellbeing insights using synthetic demo patients.
-- Translates Merseyside public health data into plain-English community risk signals.
-- Highlights access to local wellbeing, GP, pharmacy and community support.
-- Supports prevention, awareness and signposting, not diagnosis.
+---
 
-## Data and ethics
+## 🧩 What Problem It Solves
 
-Nura uses synthetic patient data for the demo and open AHAH public health data for local context. No real medical records are used.
+Wellbeing signals such as sleep, stress, activity, alcohol intake and blood pressure are often tracked separately.  
+Nura brings these signals together to help users spot early patterns, understand lifestyle risks and find relevant support before issues become harder to manage.
+
+Nura is **not a diagnostic tool** and does not replace professional medical advice.
+
+---
+
+## 🚀 Core Features
+
+- 📝 **Daily wellness check-ins** for sleep, stress, hydration, activity, energy and mood
+- 🧠 **AI-generated insights** with safe fallback summaries when no API key is configured
+- 📊 **Preventative wellness score** with contributing factors and trend observations
+- 🩺 **Synthetic NHS-style demo profile** used to personalise recommendations
+- 🌿 **Environmental context** such as green space access, walkability and air quality
+- 📍 **Trusted wellbeing resources** based on profile factors like smoking, BMI, blood pressure and asthma history
+- 📈 **Weekly dashboard visualisations** for wellbeing trends over time
+- 🔒 **Safety-first wording** that avoids diagnosis or clinical certainty
+
+---
+
+## ✨ Tech Stack
+
+- `React`
+- `TypeScript`
+- `TanStack Router`
+- `Vite`
+- `Tailwind CSS`
+- `Radix UI`
+- `Recharts`
+- `Node.js`
+- `Express`
+- `OpenAI API`
+
+---
+
+## 🔮 Planned Improvements
+
+- 🔐 Add authentication and user-owned profiles
+- 🗄️ Replace in-memory data with persistent database storage
+- 🌍 Connect environmental context to governed public datasets
+- 🧪 Add tests for scoring, validation and recommendations
+- 📊 Expand longitudinal trend analysis across multiple weeks
+- 🩺 Add clinician-reviewed copy guidelines for health-related insights
+
+---
+
+## ⚠️ Data Notice
+
+This project uses **synthetic NHS-style demo data only**.  
+It does not use real patient records and is not connected to any NHS system.
+
+Nura is **not a diagnostic tool** and does not replace professional medical advice.
