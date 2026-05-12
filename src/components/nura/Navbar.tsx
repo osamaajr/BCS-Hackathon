@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 
 const links = [
   { to: "/checkin", label: "Check-In" },
@@ -13,11 +13,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/72 backdrop-blur-2xl">
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl gradient-brand text-brand-foreground shadow-soft">
-            <Activity className="h-5 w-5" />
-          </span>
-          <span className="font-display text-2xl leading-none">Nura</span>
+        <Link to="/" className="flex items-center">
+          <span className="wordmark text-5xl leading-none">Nura</span>
         </Link>
         <nav className="hidden items-center gap-1 rounded-full border border-border/70 bg-card/58 p-1 shadow-card backdrop-blur md:flex">
           {links.map((l) => (
